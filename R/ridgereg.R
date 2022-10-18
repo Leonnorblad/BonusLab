@@ -32,9 +32,6 @@ ridgereg <- setRefClass("ridgereg",
                           
                           # Beta (Regression coefficients)
                           result$beta_hat <<- solve(t(X)%*%X+lambda*diag(ncol(X)))%*%t(X)%*%y
-                          
-                          # Fitted values 
-                          result$y_hat <<- X%*%result$beta_hat
                         },
                         print = function(){
                           
@@ -46,60 +43,56 @@ ridgereg <- setRefClass("ridgereg",
                           print.data.frame(temp)
                         },
                         predict = function(new_data){
-                          #X_new <<- model.matrix(formula, new_data)
-                          new_X <- cbind(1, new_data)
-                          Y_new <<- as.matrix(new_X)%*%result$beta_hat
-                          return(Y_new)
+                          if(!all(attr(terms(formula), which = "term.labels") %in% colnames(new_data))){
+                            stop("Invalid new_data input")}
+                          # Data.frame of reoderd new_data
+                          X_model_matrix <- data.frame()
+                          
+                          # First column=Intercept
+                          X_model_matrix[1:nrow(new_data),1] <- rep(1, nrow(new_data))
+                          colName <- c("(Intercept)")
+                          
+                          # Set counter for colums in new_data
+                          k<-1
+                          # Operates over all colums of new_data
+                          for(i in 1:ncol(new_data)){
+                            # If the coloum is a character
+                            if(is.character(new_data[,i])){
+                              # Operates over all levels of new_data
+                              for(j in 1:length(unique(new_data[,i]))){
+                                # Moves to the next column (first one 2 due to the intercept)
+                                k <- k+1
+                                # The colum name is the variable name + variable level (like in model.matrix)
+                                colName[k]<- paste(colnames(new_data)[i], unique(new_data[,i]),sep="")[j]
+                                # TRUE if the colum value belongs to the level of the variable, FALSE otherwise
+                                X_model_matrix[,k] <- new_data[,i]==unique(new_data[j,i])
+                                # Setts TRUE to 1 and FALSE to 0
+                                X_model_matrix[,k] <- as.integer(as.logical(X_model_matrix[,k]))
+                              }
+                              # If not character
+                            } else { 
+                              # Moves to the next row
+                              k <- k+1
+                              # The values is the values from new_data
+                              X_model_matrix[,k] <- new_data[,i]
+                              # The colum name is the same as in new_data
+                              colName[k] <- colnames(new_data)[i]
+                            }
+                          }
+                          # Sets colum names
+                          colnames(X_model_matrix)<-colName
+                          # Calculate predicted value by new_data times the corresponding beta parameter
+                          Y_new <<- as.matrix(X_model_matrix)%*%as.matrix(result$beta_hat[match(rownames(result$beta_hat),colnames(X_model_matrix), nomatch=0)])
+                          return(data.frame(Predictions=Y_new))
                         },
                         coef = function(){
                           return(result$beta_hat)
                         }
                       )
 )
-example <- ridgereg(data=iris, formula=Petal.Length~Petal.Width+Sepal.Width, lambda=0)
+example <- ridgereg(data=iris, formula=Petal.Length~Petal.Width+Sepal.Width+Species, lambda=0)
+example <- ridgereg(data=iris, formula=Petal.Length~., lambda=0)
 example$print()
-example$predict(new_data=data.frame(Petal.Width=1, Sepal.Width=200))
-example$predict()
-example$coef()
-
-test <- cbind(1, data.frame(Petal.Width=4))
-as.matrix(test)%*%example$coef()
-
-new_data <-
-new_data <- as.matrix(cbind(1, new_data))
-test <- example$coef()
-new_data %*% test
-
-
-
-
-lambda<-1
-lambda*diag(ncol(X))
-
-data <- iris
-formula <- Petal.Length~Species
-lambda <- 3
-result <- list()
-# 
-solve(t(X)%*%X+lambda*diag(ncol(X)))%*%t(X)%*%y
-
-X
-cbind(X[,1], scale(X[,-1]))
-
-scale_data <- data
-for(i in 1:ncol(data)){
-  if(is.numeric(data[,i])){
-    temp <- scale(data[,i])
-  } else {
-    temp <- data[,i]
-  }
-  scale_data[,i] <- temp
-}
-scale_data
-
-
-lm_mod <- lm(data=iris, formula=Petal.Length~Species)
-predict(lm_mod, data.frame(Species="versicolor"))
-
+example$predict(new_data=data.frame(Petal.Width=c(1,2,3), Sepal.Width=c(2,3,4), Species=c("versicolor", "virginica", "versicolor")))
 
 

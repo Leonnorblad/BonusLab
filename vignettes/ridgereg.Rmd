@@ -1,0 +1,70 @@
+---
+title: "ridgereg"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ridgereg}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(BonusLab)
+library(caret)
+library(mlbench)
+library(leaps)
+library(Metrics)
+```
+
+
+```{r}
+# Load data
+data("BostonHousing")
+set.seed(3456)
+
+# Split data into test and train
+trainIndex <- createDataPartition(BostonHousing$crim, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+BostonTrain <- BostonHousing[ trainIndex,]
+BostonTest  <- BostonHousing[-trainIndex,]
+```
+
+
+
+
+
+```{r}
+set.seed(123)
+fit1 <- caret::train(medv~.,
+              data = BostonTrain,
+              method = "leapForward",
+              tuneGrid = data.frame(nvmax = 14)
+              )
+summary(fit1)
+```
+
+
+```{r}
+RMSE_boston <- function(model, train=TRUE){
+  if(train==FALSE){
+    data <- BostonTest
+    actual <- BostonTest$medv
+  } else {
+    data <- BostonTrain
+    actual <- BostonTrain$medv
+  }
+  pred <- predict(model, data)
+  
+  return(sqrt(sum((pred-actual)^2/length(actual))))
+}
+```
+
+
+
