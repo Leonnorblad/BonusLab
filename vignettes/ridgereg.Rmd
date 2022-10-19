@@ -20,6 +20,8 @@ library(caret)
 library(mlbench)
 library(leaps)
 library(Metrics)
+library(MASS)
+library(knitr)
 ```
 
 
@@ -41,25 +43,29 @@ BostonTest  <- BostonHousing[-trainIndex,]
 
 
 ```{r}
+# Mehod 1: caret::train - no intercept model :(
 set.seed(123)
 fit1 <- caret::train(medv~.,
               data = BostonTrain,
               method = "leapForward",
-              tuneGrid = data.frame(nvmax = 14)
+              tuneGrid = data.frame(nvmax=14)
               )
 summary(fit1)
 ```
 
+```{r}
+fit1$times
+
+```
 
 ```{r}
 RMSE_boston <- function(model, train=TRUE){
   if(train==FALSE){
     data <- BostonTest
-    actual <- BostonTest$medv
-  } else {
+  } else if (train==TRUE){
     data <- BostonTrain
-    actual <- BostonTrain$medv
   }
+  actual <- data$medv
   pred <- predict(model, data)
   
   return(sqrt(sum((pred-actual)^2/length(actual))))
@@ -67,4 +73,27 @@ RMSE_boston <- function(model, train=TRUE){
 ```
 
 
+```{r, echo=FALSE}
+rmse1<-data.frame(RMSE_boston(fit1, train=TRUE))
+colnames(rmse1)<-"RMSE train data"
+```
+
+
+```{r, echo=TRUE}
+kable(rmse1)
+```
+
+
+
+
+```{r}
+# Method 2
+fit0 <- lm(medv~1, BostonTrain)
+fitF <- lm(medv~., BostonTrain)
+fit1 <- stepAIC(fitF, direction="forward", scope=list(lower=fit0, upper=fitF))
+
+```
+```{r}
+fit1$model
+```
 
