@@ -59,6 +59,9 @@ ridgereg <- setRefClass("ridgereg",
                           
                           # Beta (Regression coefficients)
                           result$beta_hat <<- solve(t(X)%*%X+lambda*diag(ncol(X)))%*%t(X)%*%y
+                          
+                          # Scale back the beta parameters
+                          
                         },
                         show = function(){
                           

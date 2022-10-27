@@ -1,5 +1,5 @@
 ---
-title: "flight delay"
+title: "Flight delay"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{flight delay}
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, message=FALSE, warning=FALSE}
 library(BonusLab)
 library(nycflights13)
 library(dplyr)
@@ -22,19 +22,26 @@ library(caret)
 library(knitr)
 ```
 
+## Data
+### Loading the flight and weather dataset
+Both the weather and flights dataset is from the nycflights13 package.
 ```{r}
 data(weather)
 data(flights)
 ```
 
+### Mergeing the data sets
+The two data sets are merged by time period and origin. Then the departure delay, origin, temperature, wind speed, precipiation, air pressure and visablity variables are selected. Two interaction varaibles, windspeed-precipiation and windspeed-visablity are also created. 
 ```{r}
-# data with weather
+# data with weather and flights (delays)
 dww <- left_join(flights, weather, by=c("time_hour"="time_hour", "origin"="origin")) %>%
  select(dep_delay, origin, temp, wind_speed, precip, pressure, visib) %>%
  stats::na.omit() %>% mutate(wind_pre = wind_speed*precip,
                              wind_vis = wind_speed*visib)
 ```
 
+### Data split
+The data set are then split up into training (80%), validation (15%) and test (5%).
 ```{r}
 # row in data: 100%
 rows_in_data <- 1:nrow(dww)
@@ -53,29 +60,32 @@ val_index <- caret::createDataPartition(test_val_Index, p = .75,
 
 # test: 0.25*20% = 5%
 test_index <- test_val_Index[-val_index]
-
-data.frame(val=length(val_index)/length(rows_in_data),
-           train=length(train_index)/length(rows_in_data),
-           test=length(test_index)/length(rows_in_data))
 ```
 
+
+```{r, echo=FALSE}
+df_data<-data.frame(val=(length(val_index)/length(rows_in_data))*100,
+           train=(length(train_index)/length(rows_in_data))*100,
+           test=(length(test_index)/length(rows_in_data))*100)
+
+colnames(df_data)<-c("Validation", "Training", "Test")
+rownames(df_data)<-c("")
+kable(df_data)
+```
+The table above shows the acctual size (%) of the three datasets.
+
 ```{r}
+# Datasets
 train_data <- as.data.frame(dww[train_index,])
 val_data <- as.data.frame(dww[val_index,])
 test_data <- as.data.frame(dww[test_index,])
 ```
 
+## Training the models
+To find an optimum value of \(\lambda\), four models where trained with different values of \(\lambda\). The models will be compared by validation RMSE.
 
 ```{r}
-model1 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=0)
-#print(model1)
-```
-
-```{r}
-model1$predict(val_data)
-```
-
-```{r}
+# Function to calculate RMSE
 RMSE_flight_delay <- function(model, validation=TRUE){
   if(validation==FALSE){
     data <- test_data
@@ -90,38 +100,47 @@ RMSE_flight_delay <- function(model, validation=TRUE){
 }
 ```
 
+
 ```{r}
-# RMSE on validation data
-RMSE_flight_delay(model1, validation=TRUE)
-```
-```{r}
-model1 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=1)
-model2 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=5)
-model3 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=10)
-model4 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=25)
-model5 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=50)
-model6 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=100)
-model7 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=200)
-model8 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=500)
-model9 <- ridgereg(data=train_data, formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis, lambda=1000)
+# Lambda = 1
+model1 <- ridgereg(data=train_data,
+                   formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis,
+                   lambda=1)
 RMSE1 <- RMSE_flight_delay(model1, validation=TRUE)
+
+# Lambda = 5
+model2 <- ridgereg(data=train_data,
+                   formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis,
+                   lambda=5)
 RMSE2 <- RMSE_flight_delay(model2, validation=TRUE)
+
+# Lambda = 10
+model3 <- ridgereg(data=train_data,
+                   formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis,
+                   lambda=10)
 RMSE3 <- RMSE_flight_delay(model3, validation=TRUE)
+
+# Lambda = 25
+model4 <- ridgereg(data=train_data,
+                   formula=dep_delay~origin+temp+wind_speed+precip+pressure+visib+wind_pre+wind_vis,
+                   lambda=25)
 RMSE4 <- RMSE_flight_delay(model4, validation=TRUE)
-RMSE5 <- RMSE_flight_delay(model5, validation=TRUE)
-RMSE6 <- RMSE_flight_delay(model6, validation=TRUE)
-RMSE7 <- RMSE_flight_delay(model7, validation=TRUE)
-RMSE8 <- RMSE_flight_delay(model8, validation=TRUE)
-RMSE9 <- RMSE_flight_delay(model9, validation=TRUE)
 ```
 
 
-```{r}
-RMSE_table <- data.frame(lambda=c(1,5,10,25,50,100,200,500,1000),
-           `Validarion RMSE`=c(RMSE1, RMSE2, RMSE3, RMSE4, RMSE5, RMSE6, RMSE7, RMSE8, RMSE9))
-```
-
-```{r}
+```{r, echo=FALSE}
+RMSE_table <- data.frame(model=c(1:4),
+                         lambda=c(1,5,10,25),
+           `Validation RMSE`=c(RMSE1, RMSE2, RMSE3, RMSE4))
+colnames(RMSE_table)[2:3]<-c("lambda", "Validation RMSE")
 kable(RMSE_table)
 ```
 
+The table above shows the RMSE for the four different models. The best model (lowest RMSE) is model number 3 with \(\lambda=10\)
+
+
+## Test RMSE
+```{r}
+RMSE_flight_delay(model3, validation=FALSE)
+```
+RMSE for the validation data is about X.
