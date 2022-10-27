@@ -16,7 +16,6 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(BonusLab)
-library(caret)
 library(mlbench)
 library(leaps)
 library(Metrics)
@@ -31,7 +30,7 @@ data("BostonHousing")
 set.seed(3456)
 
 # Split data into test and train
-trainIndex <- createDataPartition(BostonHousing$crim, p = .8, 
+trainIndex <- caret::createDataPartition(BostonHousing$crim, p = .8, 
                                   list = FALSE, 
                                   times = 1)
 BostonTrain <- BostonHousing[ trainIndex,]
@@ -40,6 +39,7 @@ BostonTest  <- BostonHousing[-trainIndex,]
 
 
 
+## Linear regression model with forward selection of covariates
 
 
 ```{r}
@@ -48,15 +48,18 @@ set.seed(123)
 fit1 <- caret::train(medv~.,
               data = BostonTrain,
               method = "leapForward",
-              tuneGrid = data.frame(nvmax=14)
+              tuneGrid = data.frame(nvmax=14),
               )
 summary(fit1)
 ```
 
 ```{r}
-fit1$times
+fit1$results
 
 ```
+
+
+
 
 ```{r}
 RMSE_boston <- function(model, train=TRUE){
@@ -96,4 +99,16 @@ fit1 <- stepAIC(fitF, direction="forward", scope=list(lower=fit0, upper=fitF))
 ```{r}
 fit1$model
 ```
+
+
+
+
+
+## Ridge regression model using ridgereg()
+
+
+
+
+
+
 

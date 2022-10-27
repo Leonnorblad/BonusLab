@@ -2,5 +2,11 @@
 
 export(LiU_theme)
 export(linreg)
+export(ridgereg)
+export(visualize_airport_delays)
+import(RColorBrewer)
+import(dplyr)
 import(ggplot2)
 import(methods)
+import(nycflights13)
+importFrom(stats,na.omit)

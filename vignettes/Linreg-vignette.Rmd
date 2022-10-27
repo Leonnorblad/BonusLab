@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r echo=TRUE}
 # Setup
-library(Lab4Pack)
+library(BonusLab)
 data(iris)
 ```
 
@@ -24,7 +24,7 @@ data(iris)
 ### Setup
 To use the function, first run the command below. 
 ```{r}
-s <- Lab4Pack::linreg(data=iris, formula=Petal.Width~Species)
+s <- BonusLab::linreg(data=iris, formula=Petal.Width~Species)
 ```
 
 ### print()

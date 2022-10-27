@@ -1,3 +1,30 @@
+#' Ridge regression
+#' 
+#' Performs ridge regression
+#' 
+#' @param Data A data.frame
+#' @param formula A formula
+#' @param lambda Regularization parameter
+#' @param new_data New data to be predicted in the \code{predict()} function
+#' 
+#' @return
+#' \code{print()} Returns the function call and estimated coefficients
+#'
+#' \code{predict()} Returns predictions for new data
+#' 
+#' \code{coef()} Returns a vector of estimated coefficients
+#' 
+#' 
+#' @examples
+#' data(iris)
+#' example <- ridgereg(data=iris, formula=Petal.Length~Petal.Width+Sepal.Width+Species, lambda=0)
+#' example$print()
+#' example$predict(new_data=data.frame(Petal.Width=c(1,2,3),
+#'                                    Sepal.Width=c(2,3,4),
+#'                                    Species=c("versicolor", "virginica", "versicolor")))
+#' @export ridgereg
+#' 
+
 ridgereg <- setRefClass("ridgereg",
                       fields = list(result ="list",
                                     data = "data.frame",
@@ -33,7 +60,7 @@ ridgereg <- setRefClass("ridgereg",
                           # Beta (Regression coefficients)
                           result$beta_hat <<- solve(t(X)%*%X+lambda*diag(ncol(X)))%*%t(X)%*%y
                         },
-                        print = function(){
+                        show = function(){
                           
                           cat("Call:\nridgereg(formula = ", format(formula), ", data = ", df_name,", lambda = ",lambda,")\n\n", sep="")
                           temp <- as.data.frame(t(data.frame(result$beta_hat)))
@@ -82,7 +109,7 @@ ridgereg <- setRefClass("ridgereg",
                           # Sets colum names
                           colnames(X_model_matrix)<-colName
                           # Calculate predicted value by new_data times the corresponding beta parameter
-                          Y_new <<- as.matrix(X_model_matrix)%*%as.matrix(result$beta_hat[match(rownames(result$beta_hat),colnames(X_model_matrix), nomatch=0)])
+                          Y_new <<- as.matrix(X_model_matrix[match(rownames(result$beta_hat),colnames(X_model_matrix), nomatch=0)])%*%as.matrix(result$beta_hat)
                           return(data.frame(Predictions=Y_new))
                         },
                         coef = function(){
@@ -90,9 +117,5 @@ ridgereg <- setRefClass("ridgereg",
                         }
                       )
 )
-example <- ridgereg(data=iris, formula=Petal.Length~Petal.Width+Sepal.Width+Species, lambda=0)
-example <- ridgereg(data=iris, formula=Petal.Length~., lambda=0)
-example$print()
-example$predict(new_data=data.frame(Petal.Width=c(1,2,3), Sepal.Width=c(2,3,4), Species=c("versicolor", "virginica", "versicolor")))
 
 
