@@ -9,7 +9,7 @@ Description: Computes linear regression by matrix multiplication of least square
 License: GPL-3 + file LICENSE
 RoxygenNote: 7.2.1
 Encoding: UTF-8
-Suggests: 
+Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)

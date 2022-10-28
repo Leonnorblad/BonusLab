@@ -14,12 +14,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, message=FALSE, warning=FALSE}
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+library(mlbench)
 library(BonusLab)
-library(nycflights13)
 library(dplyr)
-library(caret)
-library(knitr)
+library(nycflights13)
 ```
 
 ## Data
@@ -70,7 +69,7 @@ df_data<-data.frame(val=(length(val_index)/length(rows_in_data))*100,
 
 colnames(df_data)<-c("Validation", "Training", "Test")
 rownames(df_data)<-c("")
-kable(df_data)
+knitr::kable(df_data)
 ```
 The table above shows the acctual size (%) of the three datasets.
 
@@ -133,7 +132,7 @@ RMSE_table <- data.frame(model=c(1:4),
                          lambda=c(1,5,10,25),
            `Validation RMSE`=c(RMSE1, RMSE2, RMSE3, RMSE4))
 colnames(RMSE_table)[2:3]<-c("lambda", "Validation RMSE")
-kable(RMSE_table)
+knitr::kable(RMSE_table)
 ```
 
 The table above shows the RMSE for the four different models. The best model (lowest RMSE) is model number 3 with \(\lambda=10\)
@@ -143,4 +142,4 @@ The table above shows the RMSE for the four different models. The best model (lo
 ```{r}
 RMSE_flight_delay(model3, validation=FALSE)
 ```
-RMSE for the validation data is about X.
+RMSE for the validation data is about 40.

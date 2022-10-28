@@ -45,22 +45,13 @@ ridgereg <- setRefClass("ridgereg",
                           lambda <<- lambda
                           formula <<- formula
                           df_name <<- as.character(substitute(data))
-                          
-                          scale_d <- data
-                          for(i in 1:ncol(data)){
-                            if(is.numeric(data[,i])){
-                              scale_d[,i] <- scale(data[,i])
-                            }
-                          }
-                          scale_data <<- scale_d
-                          
-                          X <<- model.matrix(formula, scale_data)               # Independen variable(s)
+
+                          X <<- model.matrix(formula, data)               # Independen variable(s)
                           y <<- data[,all.vars(formula)[1]]                     # Dependent variable
                           
                           # Beta (Regression coefficients)
                           result$beta_hat <<- solve(t(X)%*%X+lambda*diag(ncol(X)))%*%t(X)%*%y
                           
-                          # Scale back the beta parameters
                           
                         },
                         show = function(){
